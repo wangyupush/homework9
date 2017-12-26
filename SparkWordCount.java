@@ -1,5 +1,3 @@
-package com.magicstudio.spark;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,15 +38,6 @@ public class SparkWordCount implements Serializable {
                 .setAppName(SparkWordCount.class.getSimpleName());
         
         conf.setMaster("local");
-        /**
-         * 2、创建SparkContext对象，Java开发使用JavaSparkContext；Scala开发使用SparkContext
-         * 在Spark中，SparkContext负责连接Spark集群，创建RDD、累积量和广播量等。
-         * Master参数是为了创建TaskSchedule（较低级的调度器，高层次的调度器为DAGSchedule），如下：
-         *         如果setMaster("local")则创建LocalSchedule；
-         *         如果setMaster("spark")则创建SparkDeploySchedulerBackend。
-         *         在SparkDeploySchedulerBackend的start函数，会启动一个Client对象，连接到Spark集群。
-         */
-        //JavaSparkContext sc = new JavaSparkContext(conf);
         sc = new JavaSparkContext(conf);
     }
     
@@ -56,7 +45,6 @@ public class SparkWordCount implements Serializable {
 		this.doc = doc;
 		this.isSelectFile = isSelectFile;
 		this.wordLength = wordLength;
-		
 		initSpark();
 	}
 	
@@ -86,10 +74,8 @@ public class SparkWordCount implements Serializable {
 			}
 		
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -97,41 +83,21 @@ public class SparkWordCount implements Serializable {
 	}
 	
 	public JavaPairRDD<String, Integer> wordCount(){
-        /**
-         * 3、sc中提供了textFile方法是SparkContext中定义的，如下：
-         *         def textFile(path: String): JavaRDD[String] = sc.textFile(path)    
-         * 用来读取HDFS上的文本文件、集群中节点的本地文本文件或任何支持Hadoop的文件系统上的文本文件，
-         * 它的返回值是JavaRDD[String]，是文本文件每一行
-         */
-        //JavaRDD<String> lines = sc.textFile("hdfs://soy1:9000/mapreduces/word.txt");
         JavaRDD<String> lines = null;
         if (isSelectFile){
         	lines = sc.textFile(doc);
         }
         else{
-        	lines = sc.textFile("src/com/magicstudio/spark/text/" + doc + ".txt");
+        	lines = sc.textFile("src/spark/text/" + doc + ".txt");
         }
-        
-        /**
-         * 4、将行文本内容拆分为多个单词
-         * lines调用flatMap这个transformation算子（参数类型是FlatMapFunction接口实现类）
-         * 返回每一行的每个单词
-         * 加入了中文分词的功能，调用分词后的list结果
-         */
         JavaRDD<String> words = lines.flatMap(new FlatMapFunction<String, String>(){
             private static final long serialVersionUID = -3243665984299496473L;
         
 			@Override
             public Iterator<String> call(String line) throws Exception {
-                //return Arrays.asList(line.split("\t"));
             	return getSplitWords(line).iterator();
             }
         });
-        
-        /**
-         * 5、将每个单词的初始数量都标记为1个
-         * words调用mapToPair这个transformation算子（参数类型是PairFunction接口实现类，PairFunction<String, String, Integer>的三个参数是<输入单词, Tuple2的key, Tuple2的value>），返回一个新的RDD，即JavaPairRDD
-         */
         JavaPairRDD<String, Integer> pairs = words.mapToPair(new PairFunction<String, String, Integer>() {
             private static final long serialVersionUID = -7879847028195817507L;
             @Override
@@ -139,11 +105,6 @@ public class SparkWordCount implements Serializable {
                 return new Tuple2<String, Integer>(word, 1);
             }
         });
-        
-        /**
-         * 6、计算每个相同单词出现的次数
-         * pairs调用reduceByKey这个transformation算子（参数是Function2接口实现类）对每个key的value进行reduce操作，返回一个JavaPairRDD，这个JavaPairRDD中的每一个Tuple的key是单词、value则是相同单词次数的和
-         */
         JavaPairRDD<String, Integer> wordCount = pairs.reduceByKey(new Function2<Integer, Integer, Integer>() {
             private static final long serialVersionUID = -4171349401750495688L;
             @Override
@@ -156,9 +117,6 @@ public class SparkWordCount implements Serializable {
 	}
 	
 	public JavaPairRDD<String, Integer> sortByValue(JavaPairRDD<String, Integer> wordCount, boolean isAsc){
-		//added by Dumbbell Yang at 2016-08-03
-        //加入按词频排序功能
-        //先把key和value交换，然后按sortByKey，最后再交换回去
         JavaPairRDD<Integer, String> pairs2 = wordCount.mapToPair(new PairFunction<Tuple2<String, Integer>, Integer, String>() {
             private static final long serialVersionUID = -7879847028195817508L;
             @Override
@@ -166,11 +124,8 @@ public class SparkWordCount implements Serializable {
                 return new Tuple2<Integer, String>(word._2, word._1);
             }
         });
-        
         //降序
         pairs2 = pairs2.sortByKey(isAsc);
-        
-        //再次交换key和value
         wordCount = pairs2.mapToPair(new PairFunction<Tuple2<Integer, String>, String, Integer>() {
             private static final long serialVersionUID = -7879847028195817509L;
             @Override
@@ -195,7 +150,6 @@ public class SparkWordCount implements Serializable {
 	}
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
         SparkWordCount app = new SparkWordCount();
         
         JavaPairRDD<String, Integer> wordCount = app.wordCount();
