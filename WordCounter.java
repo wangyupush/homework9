@@ -1,17 +1,3 @@
-/**JavaWordCount
- * 
- * com.magicstudio.spark
- *
- * WordCounter.java
- *
- * dumbbellyang at 2016年8月2日 下午3:42:28
- *
- * Mail:yangdanbo@163.com Weixin:dumbbellyang
- *
- * Copyright 2016 MagicStudio.All Rights Reserved
- */
-package com.magicstudio.spark;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -59,9 +45,6 @@ import org.wltea.analyzer.core.Lexeme;
 import scala.Tuple2;
 
 public class WordCounter extends JFrame {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	private final String[] docs = new String[] { "full" };
@@ -91,9 +74,6 @@ public class WordCounter extends JFrame {
 
 	private int totalWords;
 	private String curDoc;
-
-	// 是否用户选择文档
-	// 指定单词长度，0为所有长度
 	@SuppressWarnings("unused")
 	private Map<String, Integer> getWordCount(String doc,
 			boolean isSelected, int wordLength) {
@@ -136,7 +116,6 @@ public class WordCounter extends JFrame {
 			return wordCount;
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -145,24 +124,6 @@ public class WordCounter extends JFrame {
 
 	private void addTextLine(String str, int count) {
 		SimpleAttributeSet attrSet = new SimpleAttributeSet();
-		/*
-		// 循环中双数行
-		if (count % 20 == 0) {
-			StyleConstants.setForeground(attrSet, Color.darkGray);
-		}
-		// 循环中单数行
-		else if (count % 10 == 0) {
-			StyleConstants.setForeground(attrSet, Color.darkGray);
-		}
-		// 循环结束后单数行
-		else if (count % 20 < 10) {
-			StyleConstants.setForeground(attrSet, Color.darkGray);
-		}
-		// 循环结束后双数行
-		else {
-			StyleConstants.setForeground(attrSet, Color.darkGray);
-		}
-*/
 		StyleConstants.setBold(attrSet, true);
 		StyleConstants.setFontSize(attrSet, 16);
 
